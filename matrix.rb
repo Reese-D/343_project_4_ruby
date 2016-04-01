@@ -20,6 +20,13 @@ class Matrix
   #     parameters rows or columns or val is not of type Fixnum
   #     value of rows or columns is <= 0
   def initialize(rows=5, columns=5, val=0)
+    if !(val.class ==  Fixnum && columns.class == Fixnum && rows.class == Fixnum)
+      raise ArgumentError "Val isn't a fixnum"
+    end
+    if(rows <= 0 || columns <= 0)
+      raise ArgumentError "rows or columns <= 0"
+    end
+    @data = Array.new(rows) { Array.new(columns, val) }
 
   end
 
