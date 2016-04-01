@@ -21,13 +21,14 @@ class Matrix
   #     value of rows or columns is <= 0
   def initialize(rows=5, columns=5, val=0)
     if !(val.class ==  Fixnum && columns.class == Fixnum && rows.class == Fixnum)
-      raise ArgumentError "Val isn't a fixnum"
+      raise ArgumentError
     end
     if(rows <= 0 || columns <= 0)
-      raise ArgumentError "rows or columns <= 0"
+      raise ArgumentError
     end
     @data = Array.new(rows) { Array.new(columns, val) }
-
+    @rows = rows
+    @columns = columns
   end
 
   # method that returns matrix element at location (i,j)
@@ -36,7 +37,13 @@ class Matrix
   #     parameters i or j is not of type Fixnum
   #     value of i or j is outside the bounds of Matrix
   def get(i, j)
-
+    if !(i.class == Fixnum && j.class == Fixnum)
+      raise ArgumentError
+    end
+    if i > @rows-1 || j > @columns-1 || i < 0 || j < 0
+      raise ArgumentError
+    end
+    @data[i][j]
   end
 
   # method to set the value of matrix element at location (i,j) to value of parameter val
@@ -45,39 +52,100 @@ class Matrix
   #     parameters i or j or val is not of type Fixnum
   #     the value of i or j is outside the bounds of Matrix
   def set(i, j, val)
-
+    if !(i.class == Fixnum && j.class == Fixnum && val.class == Fixnum)
+      raise ArgumentError
+    end
+    if i > @rows-1 || j > @columns-1 || i < 0 || j < 0
+      raise ArgumentError
+    end
+    @data[i][j] = val
   end
 
   # method that returns a new matrix object that is the sum of this and parameter matrices.
   # raise ArgumentError exception if the parameter m is not of type Matrix
   # raise IncompatibleMatricesError exception if the matrices are not compatible for addition operation
   def add(m)
-
+    if m.class != self.class
+      raise ArgumentError
+    end
+    returnVal = Matrix.new(@rows, @columns, 0)
+    if m.rows != @rows  || m.columns != @columns
+      raise IncompatibleMatricesError, "m1 rows and columns not same as m2 rows columns"
+    end
+    for i in 0..@rows-1
+      for j in 0..@columns-1
+        returnVal.set(i,j,@data[i][j] + m.get(i,j))
+      end
+    end
+    returnVal
   end
 
   # method that returns a new matrix object that is the difference of this and parameter matrices
   # raise ArgumentError exception if the parameter m is not of type Matrix
   # raise IncompatibleMatricesError exception if the matrices are not compatible for subtraction operation
   def subtract(m)
-
+    if m.class != self.class
+      raise ArgumentError
+    end
+    returnVal = Matrix.new(@rows, @columns, 0)
+    if m.rows != @rows || m.columns != @columns
+      raise IncompatibleMatricesError, "wronog number of rows/columns"
+    end
+    for i in 0..@rows-1
+      for j in 0..@columns-1
+        returnVal.set(i,j, @data[i][j] - m.get(i,j))
+      end
+    end
+    returnVal
   end
 
   # method that returns a new matrix object that is a scalar multiple of source matrix object
   # raise ArgumentError exception if the parameter k is not of type Fixnum
   def scalarmult(k)
-
+    if k.class != Fixnum
+      raise ArgumentError
+    end
+    returnVal = Matrix.new(@rows, @columns, 0)
+    for i in 0..@rows-1
+      for j in 0..@columns-1
+        returnVal.set(i,j, @data[i][j] * k)
+      end
+    end
+    returnVal
   end
 
   # method that returns a new matrix object that is the product of this and parameter matrices
   # raise ArgumentError exception if the parameter m is not of type Matrix
   # raise IncompatibleMatricesError exception if the matrices are not compatible for multiplication operation
   def multiply(m)
-
+    if m.class != self.class
+      raise ArgumentError
+    end
+    if @columns != m.rows
+      raise IncompatibleMatricesError, "columns is of m1 not same as rows m2"
+    end
+    returnArray = Matrix.new(@rows, m.columns, 0)
+    for i in 0..@rows-1
+      for j in 0..m.columns-1
+        temp = 0
+        for z in 0..@columns-1
+          temp += @data[i][z] * m.get(z,j)
+        end
+        returnArray.set(i,j,temp)
+      end
+    end
+    returnArray
   end
 
   # method that returns a new matrix object that is the transpose of the source matrix
   def transpose
-
+    returnArray = Matrix.new(@columns, @rows, 0)
+    for i in 0..@rows-1
+      for j in 0..@columns-1
+        returnArray.set(j,i,@data[i][j])
+      end
+    end
+    returnArray
   end
 
   # overload + for matrix addition
@@ -100,19 +168,39 @@ class Matrix
   #     parameter size is not of type Fixnum
   #     the value of size <= 0
   def Matrix.identity(size)
-
+    if size.class != Fixnum || size <= 0
+      raise ArgumentError
+    end
+    returnMatrix = Matrix.new(size,size,0)
+    for i in 0..size-1
+      returnMatrix.set(i,i,1)
+    end
+    returnMatrix
   end
 
   # method that sets every element in the matrix to value of parameter val
   # raise ArgumentError exception if val is not of type Fixnum
   # hint: use fill() method of Array to fill the matrix
   def fill(val)
-
+    if val.class != Fixnum
+      raise ArgumentError
+    end
+    for i in 0..@rows-1
+      for j in 0..@columns-1
+        @data[i][j] = val
+      end
+    end
   end
 
   # method that return a deep copy/clone of this matrix object
   def clone
-
+    newVal = Matrix.new(@rows, @columns, 0)
+    for i in 0..@rows-1
+      for j in 0..@columns-1
+        newVal.set(i,j,@data[i][j])
+      end
+    end
+    newVal
   end
 
   # method that returns true if this matrix object and the parameter matrix object are equal
@@ -120,20 +208,50 @@ class Matrix
   # matrices are equal). Otherwise, it returns false.
   # returns false if the parameter m is not of type Matrix
   def ==(m)
-
+    bool = true
+    if m.class != Matrix || m.rows != @rows || m.columns != @columns
+      return false
+    end
+    for i in 0..@rows-1
+      for j in 0..@columns-1
+        if @data[i][j] != m.get(i,j)
+          bool = false
+        end
+      end
+    end
+    bool
   end
 
   # method that returns a string representation of matrix data in table (row x col) format
   def to_s
-
+    string = ""
+    for j in 0..@columns-1
+      #print "#{j}\t"
+    end
+    for i in 0..@rows-1
+      #print "\n#{i}\t"
+      for j in 0..@columns-1
+        string += "#{@data[i][j]}"
+        if !(j+ 1 == @columns) #apparently it fails if you leave trailing spaces
+          string += " "
+        end
+        #print "#{@data[i][j]} "
+      end
+      #print "\n"
+      string += "\n"
+    end
+    string
   end
 
   # method that for each element in the matrix yields with information
   # on row, column, and data value at location (i,j)
   def each
-
+    for i in 0..@rows-1
+      for j in 0..@columns-1
+        yield i, j, @data[i][j]
+      end
+    end
   end
-
 end
 
 #
@@ -144,6 +262,7 @@ class IncompatibleMatricesError < Exception
     super msg
   end
 end
+
 
 #
 #  main test driver
@@ -240,7 +359,6 @@ def main
   rescue IncompatibleMatricesError => exp
     puts("#{exp.message} - multiply failed\n")
   end
-
 end
 
 # uncomment the following line to run the main() method
